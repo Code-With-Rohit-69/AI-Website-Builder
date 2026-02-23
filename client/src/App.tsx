@@ -7,6 +7,9 @@ import Preview from "./pages/Preview.tsx";
 import Community from "./pages/Community.tsx";
 import View from "./pages/View.tsx";
 import Navbar from "./components/Navbar.tsx";
+import { Toaster } from "sonner";
+import AuthPage from "./pages/auth/AuthPage.tsx";
+import Settings from "./pages/Settings.tsx";
 
 const App = () => {
   const { pathname } = useLocation();
@@ -18,6 +21,7 @@ const App = () => {
 
   return (
     <div>
+      <Toaster />
       {!hideNavbar && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
@@ -28,6 +32,8 @@ const App = () => {
         <Route path="/preview/:projectId/:versionId" element={<Preview />} />
         <Route path="/community" element={<Community />} />
         <Route path="/view/:projectId" element={<View />} />
+        <Route path="/auth/:pathname" element={<AuthPage />} />
+        <Route path="/account/settings" element={<Settings />} />
       </Routes>
     </div>
   );

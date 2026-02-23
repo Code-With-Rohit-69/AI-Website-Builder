@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import type { Project } from "../types";
 import { Loader2Icon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { dummyProjects } from "../assets/assets";
 import Footer from "../components/Footer";
+import api from "@/configs/axios";
+import { toast } from "sonner";
 
 const Community = () => {
   const [loading, setLoading] = React.useState(true);
@@ -11,11 +12,14 @@ const Community = () => {
   const navigate = useNavigate();
 
   const fetchProjects = async () => {
-    setProjects(dummyProjects);
-
-    setTimeout(() => {
+    try {
+      const { data } = await api.get("/api/project/published");
+      setProjects(data.projects);
       setLoading(false);
-    }, 1000);
+    } catch (error: any) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || error.message);
+    }
   };
 
   useEffect(() => {
@@ -79,9 +83,7 @@ const Community = () => {
                         {new Date(project.createdAt).toLocaleString()}
                       </span>
                       <div className="flex gap-3 text-white text-sm">
-                        <button
-                          className="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-md transition-colors flex items-center gap-2"
-                        >
+                        <button className="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-md transition-colors flex items-center gap-2">
                           <span className="bg-gray-200 size-4 rounded-full text-black font-semibold flex items-center justify-center">
                             {project?.user?.name?.slice(0, 1)}
                           </span>
