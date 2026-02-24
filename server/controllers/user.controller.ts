@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../lib/prisma.js";
 import openai from "../config/openai.js";
+import Stripe from "stripe";
 
 export const getUserCredits = async (req: Request, res: Response) => {
   try {
@@ -324,6 +325,8 @@ export const purchaseCredits = async (req: Request, res: Response) => {
 
     const { planId } = req.body as { planId: keyof typeof plans };
 
+    const origin = req.headers.origin as string;
+
     const plan: Plan = plans[planId];
 
     if (!plan) {
@@ -338,6 +341,33 @@ export const purchaseCredits = async (req: Request, res: Response) => {
         credits: plan.credits,
       },
     });
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+
+    const session = await stripe.checkout.sessions.create({
+      success_url: `${origin}/loading`,
+      cancel_url: `${origin}`,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `AiSiteBuilder - ${plan.credits} credits`,
+            },
+            unit_amount: Math.floor(transaction.amount) * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      metadata: {
+        transactionId: transaction.id,
+        appId: "ai-site-builder",
+      },
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+    });
+
+    res.json({ payment_link: session.url });
   } catch (error: any) {
     console.log(error.code || error.message);
     return res.status(500).json({ message: error.code || error.message });
